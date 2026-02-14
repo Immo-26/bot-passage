@@ -56,7 +56,7 @@ DONJON_SUCCES = {
     "Nagate": [("Dernier","nagate_dernier"),("Hardi","nagate_hardi"),("Duo","nagate_duo")],
     "Tanu": [("Nomade","tanu_nomade"),("Blitzkrieg","tanu_blitz"),("Duo","tanu_duo")],
     "Founo": [("Dernier","founo_dernier"),("Anachorète","founo_anachorete"),("Duo","founo_duo")],
-    "Dojo du vent": [("Premier","dojo_premier"),("Pusillanime","dojo_pusillanime"),("Duo","dojo_duo")],
+    "Dojo du vent": [("Premier","dojo_premier"),("Pusillanime","dojo_pusillamine"),("Duo","dojo_duo")],
     "Damadrya": [("Anachorète","damadrya_anachorete"),("Premier","damadrya_premier"),("Duo","damadrya_duo")],
     "Katamashii": [("Main propres","katamashii_main"),("Hardi","katamashii_hardi"),("Duo","katamashii_duo")],
     "Kralamour": [("Nomade","kralamour_nomade"),("Blitzkrieg","kralamour_blitzkrieg"),("Duo","kralamour_duo")],
@@ -85,7 +85,7 @@ def load_passeurs_map():
     except:
         return {}
 
-def get_passeur_for_donjon(d): 
+def get_passeur_for_donjon(d):
     return load_passeurs_map().get(d, OWNER_ID)
 
 def next_ticket_name(cat, prefix):
@@ -139,7 +139,6 @@ def update_or_add_comment_field(embed: discord.Embed, new_value: str) -> discord
     return embed
 
 async def find_recap_message(channel: discord.TextChannel) -> discord.Message | None:
-    # Cherche le message récapitulatif du bot (dans les 50 derniers messages)
     async for m in channel.history(limit=50, oldest_first=True):
         if m.author == bot.user and m.embeds:
             emb = m.embeds[0]
@@ -366,8 +365,17 @@ class FeedbackPersistentView(View):
         if not passeur_id:
             passeur_id = OWNER_ID
 
+        # ✅ Autorisation : seul le passeur assigné ou OWNER_ID peut valider
+        if interaction.user.id not in (passeur_id, OWNER_ID):
+            return await interaction.response.send_message(
+                "❌ Tu ne peux pas valider ce passage. Seul le passeur assigné (ou un admin) peut le faire.",
+                ephemeral=True
+            )
+
         disp = interaction.channel.topic if interaction.channel.topic else "Non précisé"
-        author_id = passeur_id if interaction.user.id == OWNER_ID else interaction.user.id
+
+        # ✅ "Par" = la personne autorisée qui clique
+        author_id = interaction.user.id
         client_mention = f"<@{client_id}>" if client_id else (client_val or "Client inconnu")
 
         e = discord.Embed(title="Passage effectué !", color=0x2ECC71)
@@ -380,6 +388,7 @@ class FeedbackPersistentView(View):
 
         await fb.send(embed=e)
 
+        # supprime le message bouton pour éviter double validation
         try:
             await interaction.message.delete()
         except:
@@ -456,7 +465,6 @@ async def post_bot_dashboard():
             pass
         dashboard_message = msg
     else:
-        # Force le view à être la version sans "Mettre hors ligne"
         old = dashboard_message.embeds[0]
         e = discord.Embed(title=old.title, description=old.description, color=old.color)
         e.add_field(name="État du bot", value="✅ En ligne")
