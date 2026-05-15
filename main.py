@@ -64,9 +64,6 @@ DONJON_SUCCES = {
 }
 
 DISABLED_SUCCES = {
-    "Sakaii": ["sakaii_blitzkrieg"],
-    "Glours": ["glours_collant"],
-    "Tanu": ["tanu_blitz"],
     "Dojo du vent": ["dojo_premier","dojo_duo"],
     "Katamashii": ["katamashii_hardi","katamashii_duo"]
 }
